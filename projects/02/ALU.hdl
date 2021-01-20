@@ -43,4 +43,37 @@ CHIP ALU {
 
     PARTS:
    // Put you code here:
+   
+   //pre-set x:
+   Mux16(a=x ,b=false ,sel=zx ,out=muxOut1 );
+   Not16(in=muxOut1 ,out=notOut1 );
+   Mux16(a=muxOut1 ,b=notOut1 ,sel=nx ,out=preSetX );
+   
+   //pre-set y:
+   Mux16(a=y ,b=false ,sel=zy ,out=muxOut2 );
+   Not16(in=muxOut2 ,out=notOut2 );
+   Mux16(a=muxOut2 ,b=notOut2 ,sel=ny ,out=preSetY );
+   
+   //Selecting between ADD or bitwise AND computation:
+   And16(a=preSetX ,b=preSetY ,out=andOut );
+   Add16(a=preSetX ,b=preSetY ,out=addOut );
+   Mux16(a=andOut ,b=addOut ,sel=f ,out=functOut );
+   
+   //post setting the output:
+   Not16(in=functOut ,out=notOut3 );
+   Mux16(a=functOut ,b=notOut3 ,sel=no ,out[0..7]=outFinal1, out[8..15]=outFinal2 );
+   
+   // out bit stream:
+   Or16(a[0..7]=outFinal1 ,a[8..15]=outFinal2, b=false ,out=out );
+   
+   // zr bit:
+   Or8Way(in=outFinal1 ,out=orOut1 );
+   Or8Way(in=outFinal2 ,out=orOut2 );
+   Or(a=orOut1 ,b=orOut2 ,out=orOut3 );
+   Not(in=orOut3, out=zr);
+   
+   // ng bit:
+   And16(a[0..7]=outFinal1 ,a[8..15]=outFinal2, b[0..14]=false ,b[15]=true ,out[0..7]=false, out[8..15]=andOut1 );
+   Or8Way(in=andOut1 ,out=ng );
+   
 }
